@@ -2,6 +2,8 @@ from stero_segmentation.monodepth2.layers import *
 from collections import OrderedDict
 import sys, os
 sys.path.append(os.path.abspath("../monodepth2"))
+from layers import disp_to_depth
+sys.path.append(os.path.abspath("../monodepth2/networks"))
 import networks
 from layers import disp_to_depth
 
