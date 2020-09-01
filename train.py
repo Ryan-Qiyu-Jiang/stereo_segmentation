@@ -21,7 +21,6 @@ from torch.utils.data import random_split
 import os
 from torch import nn
 import torchvision
-from DenseCRFLoss import DenseCRFLoss
 from IPython.display import clear_output 
 import PIL.Image as pil
 import matplotlib as mpl
