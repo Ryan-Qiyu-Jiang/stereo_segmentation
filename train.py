@@ -19,7 +19,6 @@ from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from torch.utils.data import random_split
 import os
-from torch import nn
 import torchvision
 from IPython.display import clear_output 
 import PIL.Image as pil

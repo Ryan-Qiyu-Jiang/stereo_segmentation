@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from torch import nn
+import numpy as np
 
 import sys, os
 sys.path.append(os.path.abspath("monodepth2"))
