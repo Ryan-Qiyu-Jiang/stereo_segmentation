@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function
+
 import matplotlib.pyplot as plt
 import io
 import requests
@@ -21,9 +23,6 @@ from torch import nn
 import torchvision
 from DenseCRFLoss import DenseCRFLoss
 from IPython.display import clear_output 
-
-from __future__ import absolute_import, division, print_function
-
 import PIL.Image as pil
 import matplotlib as mpl
 import matplotlib.cm as cm
