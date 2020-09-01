@@ -8,6 +8,7 @@ import sys
 sys.path.append(os.path.abspath("../rloss/pytorch/pytorch-deeplab_v3_plus"))
 from DenseCRFLoss import DenseCRFLoss
 
+import monodepth2.networks as networks
 from stero_segmentation.monodepth2.layers import *
 from collections import OrderedDict
 

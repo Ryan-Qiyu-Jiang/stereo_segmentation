@@ -1,5 +1,6 @@
 from stero_segmentation.monodepth2.layers import *
 from collections import OrderedDict
+import monodepth2.networks as networks
 
 class DebugDepthDecoder(nn.Module):
     def __init__(self, num_ch_enc, scales=range(4), num_output_channels=1, use_skips=True):

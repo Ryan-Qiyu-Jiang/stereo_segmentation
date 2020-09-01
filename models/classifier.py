@@ -4,6 +4,8 @@ from torch.autograd import Variable
 from torch.nn import functional as F
 import pytorch_lightning as pl
 
+import monodepth2.networks as networks
+
 from stero_segmentation.monodepth2.layers import *
 from collections import OrderedDict
 

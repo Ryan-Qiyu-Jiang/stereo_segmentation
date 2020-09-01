@@ -29,7 +29,7 @@ import tensorflow as tf
 import datetime, os
 from pytorch_lightning import loggers as pl_loggers
 
-from monodepth2 import networks
+import monodepth2.networks as networks
 from monodepth2.layers import disp_to_depth
 from collections import OrderedDict
 
