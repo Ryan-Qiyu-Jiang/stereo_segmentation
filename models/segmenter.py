@@ -14,6 +14,7 @@ import networks
 from layers import *
 from collections import OrderedDict
 from . import DebugDepthDecoder
+from utils import denormalizeimage
 
 class SegModel(pl.LightningModule):
 
