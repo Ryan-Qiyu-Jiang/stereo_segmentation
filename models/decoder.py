@@ -2,7 +2,6 @@ from stero_segmentation.monodepth2.layers import *
 from collections import OrderedDict
 import sys, os
 import stero_segmentation.monodepth2.networks as networks
-from stero_segmentation.monodepth2.layers import disp_to_depth
 
 
 class DebugDepthDecoder(nn.Module):
