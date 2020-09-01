@@ -3,6 +3,8 @@ from torchvision import models, transforms
 from torch.autograd import Variable
 from torch.nn import functional as F
 import pytorch_lightning as pl
+from torch import nn
+
 import sys, os
 sys.path.append(os.path.abspath("rloss/pytorch/pytorch-deeplab_v3_plus"))
 from DenseCRFLoss import DenseCRFLoss
