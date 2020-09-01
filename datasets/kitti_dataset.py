@@ -6,7 +6,7 @@ from PIL import Image
 import torchvision.transforms as transforms
 import matplotlib.patches as patches
 from skimage.transform import resize
-import sys
+import sys, os
 import pandas as pd
 import numpy as np
 
