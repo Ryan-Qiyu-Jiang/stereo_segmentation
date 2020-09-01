@@ -10,6 +10,8 @@ from DenseCRFLoss import DenseCRFLoss
 
 sys.path.append(os.path.abspath("../monodepth2"))
 import networks
+from layers import disp_to_depth
+
 from stero_segmentation.monodepth2.layers import *
 from collections import OrderedDict
 
