@@ -4,11 +4,12 @@ from torch.autograd import Variable
 from torch.nn import functional as F
 import pytorch_lightning as pl
 import sys, os
-sys.path.append(os.path.abspath("../rloss/pytorch/pytorch-deeplab_v3_plus"))
+sys.path.append(os.path.abspath("rloss/pytorch/pytorch-deeplab_v3_plus"))
 from DenseCRFLoss import DenseCRFLoss
 
-import stero_segmentation.monodepth2.networks as networks
-from stero_segmentation.monodepth2.layers import *
+sys.path.append(os.path.abspath("monodepth2"))
+import networks
+from layers import *
 from collections import OrderedDict
 
 class JointModel(pl.LightningModule):

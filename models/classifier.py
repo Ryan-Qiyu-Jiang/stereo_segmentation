@@ -6,8 +6,8 @@ import pytorch_lightning as pl
 import sys, os
 sys.path.append(os.path.abspath("monodepth2"))
 import networks
+from layers import *
 
-from stero_segmentation.monodepth2.layers import *
 from collections import OrderedDict
 
 class ClassifierModel(pl.LightningModule):
