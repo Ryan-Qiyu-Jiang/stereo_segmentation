@@ -3,8 +3,9 @@ from torchvision import models, transforms
 from torch.autograd import Variable
 from torch.nn import functional as F
 import pytorch_lightning as pl
-
-import monodepth2.networks as networks
+import sys
+sys.path.append(os.path.abspath("../monodepth2"))
+import networks
 
 from stero_segmentation.monodepth2.layers import *
 from collections import OrderedDict

@@ -6,6 +6,8 @@ import pytorch_lightning as pl
 import sys
 sys.path.append(os.path.abspath("../rloss/pytorch/pytorch-deeplab_v3_plus"))
 from DenseCRFLoss import DenseCRFLoss
+sys.path.append(os.path.abspath("../monodepth2"))
+import networks
 
 import monodepth2.networks as networks
 from stero_segmentation.monodepth2.layers import *
