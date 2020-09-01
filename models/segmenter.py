@@ -16,6 +16,9 @@ from collections import OrderedDict
 from . import DebugDepthDecoder
 from utils import denormalizeimage
 
+mean = [0.485, 0.456, 0.406]
+std = [0.229, 0.224, 0.225]
+
 class SegModel(pl.LightningModule):
 
     def __init__(self, cls_model, lr=7e-3):
