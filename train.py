@@ -1,38 +1,18 @@
-from __future__ import absolute_import, division, print_function
-
-import matplotlib.pyplot as plt
-import io
-import requests
 from PIL import Image
-from torchvision import models, transforms
-from torch.autograd import Variable
-from torch.nn import functional as F
 import numpy as np
 import cv2
-import pdb
-import matplotlib.pyplot as plt
 import torch
-import urllib
-from torchvision.datasets import MNIST, VOCDetection
-from torchvision import transforms
-from torch.utils.data import DataLoader
-import pytorch_lightning as pl
 from torch.utils.data import random_split
-import os
-import torchvision
-from IPython.display import clear_output 
-import PIL.Image as pil
-import matplotlib as mpl
-import matplotlib.cm as cm
+from torchvision import transforms, DataLoader
+import pytorch_lightning as pl
+import matplotlib.pyplot as plt
 import tensorflow as tf
 import datetime, os
 from pytorch_lightning import loggers as pl_loggers
 
-from collections import OrderedDict
-
 from datasets import SingleDataset, SeedsDataset, ListDataset
 from models import SegModel, SegSeedModel, JointModel, DebugDepthDecoder, ClassifierModel
-
+from utils import denormalizeimage, show
 
 device = torch.device("cuda")
 

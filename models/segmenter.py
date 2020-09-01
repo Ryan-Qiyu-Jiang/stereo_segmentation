@@ -17,7 +17,7 @@ from . import DebugDepthDecoder
 
 class SegModel(pl.LightningModule):
 
-    def __init__(self, cls_model):
+    def __init__(self, cls_model, lr=7e-3):
         super().__init__()
         self.num_classes = 9
         self.encoder = networks.ResnetEncoder(18, False)
@@ -55,7 +55,7 @@ class SegModel(pl.LightningModule):
         self.rloss_scale = 0.5
         self.rloss_sig_rgb = 15
         self.rloss_sig_xy = 100
-        self.lr = 1e-3
+        self.lr = lr
         self.densecrflosslayer = DenseCRFLoss(weight=self.rloss_weight, 
                                               sigma_rgb=self.rloss_sig_rgb, 
                                               sigma_xy=self.rloss_sig_xy, 
@@ -131,22 +131,9 @@ class SegModel(pl.LightningModule):
 class SegSeedModel(pl.LightningModule):
 
     def __init__(self):
-        super().__init__()
+        super().__init__(lr=7e-3)
         self.num_classes = 9
         self.encoder = networks.ResnetEncoder(18, True)
-
-        # model_name = 'mono+stereo_640x192'
-        # model_path = os.path.join("models", model_name)
-        # print("-> Loading model from ", model_path)
-        # encoder_path = os.path.join(model_path, "encoder.pth")
-        # depth_decoder_path = os.path.join(model_path, "depth.pth")
-        # loaded_dict_enc = torch.load(encoder_path, map_location=device)
-        # feed_height = loaded_dict_enc['height']
-        # feed_width = loaded_dict_enc['width']
-        # filtered_dict_enc = {k: v for k, v in loaded_dict_enc.items() if k in self.encoder.state_dict()}
-        # self.encoder.load_state_dict(filtered_dict_enc)
-        # self.encoder.eval();
-        
         self.decoder = networks.DepthDecoder(
             num_ch_enc=self.encoder.num_ch_enc, scales=range(5),
             num_output_channels=self.num_classes)
@@ -166,7 +153,7 @@ class SegSeedModel(pl.LightningModule):
         self.rloss_scale = 0.5
         self.rloss_sig_rgb = 15
         self.rloss_sig_xy = 100
-        self.lr = 7e-3
+        self.lr = lr
         self.densecrflosslayer = DenseCRFLoss(weight=self.rloss_weight, 
                                               sigma_rgb=self.rloss_sig_rgb, 
                                               sigma_xy=self.rloss_sig_xy, 
