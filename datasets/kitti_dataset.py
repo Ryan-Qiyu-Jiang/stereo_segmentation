@@ -101,7 +101,7 @@ class SingleDataset(torch.utils.data.Dataset):
         return self.image, self.seeds
 
     def __len__(self):
-        return len(self.length)
+        return self.length
 
 # train_path = '/content/kitti/train.txt'
 # train_dataset = SingleDataset(train_path)
