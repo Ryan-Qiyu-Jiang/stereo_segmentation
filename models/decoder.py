@@ -5,7 +5,7 @@ import numpy as np
 import sys, os
 sys.path.append(os.path.abspath("monodepth2"))
 import networks
-
+from layers import *
 
 class DebugDepthDecoder(nn.Module):
     def __init__(self, num_ch_enc, scales=range(4), num_output_channels=1, use_skips=True):
