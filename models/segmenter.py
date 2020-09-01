@@ -184,8 +184,7 @@ class SegSeedModel(pl.LightningModule):
 
         criterion = torch.nn.CrossEntropyLoss(ignore_index=self.num_classes)
         seeds = torch.argmax(seeds, dim=1)
-        seg_padded = torch.cat((seg, seg[:,:1,::]), dim=1)
-        seed_loss = criterion(seg_padded, seeds)
+        seed_loss = criterion(seg, seeds)
         self.loss_decomp['seed'] += [seed_loss.detach()]
         if self.rloss_weight == 0:
           self.loss_decomp['dCRF'] += [0]
