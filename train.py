@@ -31,23 +31,23 @@ from pytorch_lightning import loggers as pl_loggers
 
 from collections import OrderedDict
 
-from datasets import SingleDataset, ListDataset
+from datasets import SingleDataset, SeedsDataset, ListDataset
 from models import SegModel, SegSeedModel, JointModel, DebugDepthDecoder, ClassifierModel
 
 
 device = torch.device("cuda")
 
 
-single_path = '/content/kitti/single.txt'
-single_dataset = SingleDataset(train_path)
-single_loader = DataLoader(single_dataset, batch_size=1, shuffle=True, num_workers=4)
-
-train_path = '/content/kitti/train.txt'
+train_path = 'data/kitti/train.txt'
 train_dataset = SeedsDataset(train_path)
 n = len(train_dataset)
 train, val = random_split(train_dataset, [int(n*0.7), n-int(n*0.7)])
 train_loader = DataLoader(train, batch_size=1, shuffle=True, num_workers=4)
 val_loader = DataLoader(val, batch_size=1, num_workers=4)
+
+images, labels = iter(train_loader).next()
+single_dataset = SingleDataset(images, labels, n)
+single_loader = DataLoader(single_dataset, batch_size=1, shuffle=True, num_workers=4)
 
 # joint_model = JointModel()
 # cls_model = ClassifierModel()
