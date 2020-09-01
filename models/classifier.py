@@ -3,7 +3,7 @@ from torchvision import models, transforms
 from torch.autograd import Variable
 from torch.nn import functional as F
 import pytorch_lightning as pl
-import sys
+import sys, os
 sys.path.append(os.path.abspath("../monodepth2"))
 import networks
 
