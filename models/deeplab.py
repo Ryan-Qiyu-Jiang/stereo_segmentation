@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from torchvision import models, transforms
 from torch.autograd import Variable
 from torch.nn import functional as F
@@ -14,6 +15,8 @@ from modeling.deeplab import *
 from collections import OrderedDict
 from utils import denormalizeimage
 
+mean = [0.485, 0.456, 0.406]
+std = [0.229, 0.224, 0.225]
 
 class DeeplabModel(pl.LightningModule):
 
@@ -40,7 +43,9 @@ class DeeplabModel(pl.LightningModule):
         return self.model(x) 
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.parameters(), lr=self.lr, momentum=0.9, weight_decay=0.0005)
+        train_params = [{'params': self.model.get_1x_lr_params(), 'lr': self.lr},
+                        {'params': self.model.get_10x_lr_params(), 'lr': self.lr * 10}]
+        optimizer = torch.optim.SGD(train_params, momentum=0.9, weight_decay=0.0005)
         return optimizer
 
     def get_loss(self, batch):

@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from torchvision import models, transforms
 from torch.autograd import Variable
 from torch.nn import functional as F
