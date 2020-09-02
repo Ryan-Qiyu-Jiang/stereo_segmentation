@@ -134,7 +134,7 @@ class SegModel(pl.LightningModule):
 
 class SegSeedModel(pl.LightningModule):
 
-    def __init__(self, lr=7e-3):
+    def __init__(self, lr=7e-3, encoder_depth=18):
         super().__init__()
         self.num_classes = 9
         self.encoder = networks.ResnetEncoder(18, True)
