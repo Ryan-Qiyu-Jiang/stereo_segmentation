@@ -21,10 +21,10 @@ std = [0.229, 0.224, 0.225]
 
 class SegModel(pl.LightningModule):
 
-    def __init__(self, cls_model, lr=7e-3):
+    def __init__(self, cls_model, lr=7e-3, encoder_depth=18):
         super().__init__()
         self.num_classes = 9
-        self.encoder = networks.ResnetEncoder(18, False)
+        self.encoder = networks.ResnetEncoder(encoder_depth, False)
         self.cls_model = cls_model
         self.cls_model.eval()
 
