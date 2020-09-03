@@ -124,24 +124,28 @@ class StereoDataset(torch.utils.data.Dataset):
                                         transforms.Normalize(mean, std)])
         input_img = transform(img)
 
-        label_path = self.label_files[file_index % len(self.img_files)].rstrip()
-        seeds = None
-        index = None
-        if os.path.exists(label_path):
-          labels_df = pd.read_csv(label_path, header=None, sep="\s+")
-          labels_df[0] = np.array([CLASS_NAMES.index(n) for n in labels_df[0]])
-          seeds = torch.zeros(len(CLASS_NAMES)+1, 192, 640)
-          w, h = (640, 192)
-          w1, h1 = img.size
-          bbox = labels_df.iloc[:, 4:8].values
-          index = np.zeros((bbox.shape[0], 3))
-          index[:, 0] = labels_df[0].values
-          index[:, 2] = (bbox[:,0]+bbox[:,2])/2/w1*w
-          index[:, 1] = (bbox[:,1]+bbox[:,3])/2/h1*h
-          index = np.round(index).astype(int)
-          for img_class, y, x in index:
-            seeds[img_class,y-5:y+5,x-5:x+5] = 1
-          seeds[len(CLASS_NAMES)] = 0.5
+        if not use_pair:
+            label_path = self.label_files[file_index % len(self.img_files)].rstrip()
+            seeds = None
+            index = None
+            if os.path.exists(label_path):
+            labels_df = pd.read_csv(label_path, header=None, sep="\s+")
+            labels_df[0] = np.array([CLASS_NAMES.index(n) for n in labels_df[0]])
+            seeds = torch.zeros(len(CLASS_NAMES)+1, 192, 640)
+            w, h = (640, 192)
+            w1, h1 = img.size
+            bbox = labels_df.iloc[:, 4:8].values
+            index = np.zeros((bbox.shape[0], 3))
+            index[:, 0] = labels_df[0].values
+            index[:, 2] = (bbox[:,0]+bbox[:,2])/2/w1*w
+            index[:, 1] = (bbox[:,1]+bbox[:,3])/2/h1*h
+            index = np.round(index).astype(int)
+            for img_class, y, x in index:
+                seeds[img_class,y-5:y+5,x-5:x+5] = 1
+            seeds[len(CLASS_NAMES)] = 0.5
+        else:
+            seeds = torch.zeros(len(CLASS_NAMES)+1, 192, 640)
+            seeds[len(CLASS_NAMES)] = 0.5
         
         return input_img, seeds
 
