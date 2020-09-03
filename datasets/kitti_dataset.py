@@ -168,6 +168,13 @@ class StereoDataset(torch.utils.data.Dataset):
                 seeds[img_class,y-5:y+5,x-5:x+5] = 1
             seeds[len(CLASS_NAMES)] = 0.5
         
+        seeds_empty = torch.zeros(len(CLASS_NAMES)+1, 192, 640)
+        seeds_empty[len(CLASS_NAMES)] = 0.5
+
+        seeds_left = torch.unsqueeze(seeds, dim=0)
+        seeds_right = torch.unsqueeze(seeds_empty, dim=0)
+        seeds_pair = torch.cat([seeds_left, seeds_right], dim=0)
+
         tensor_left = torch.unsqueeze(input_img_left, dim=0)
         tensor_right = torch.unsqueeze(input_img_right, dim=0)
         img_pair = torch.cat([tensor_left, tensor_right], dim=0)
@@ -175,7 +182,7 @@ class StereoDataset(torch.utils.data.Dataset):
         cam = copy.deepcopy(self.cam)
         cam['stereo_T'] = self.get_stereo_T(side='l', do_flip=False)
 
-        return img_pair, seeds, cam
+        return img_pair, seeds_pair, cam
 
     def __len__(self):
         return 2*len(self.img_files)
