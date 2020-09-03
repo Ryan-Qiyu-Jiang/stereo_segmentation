@@ -23,7 +23,7 @@ mean = [0.485, 0.456, 0.406]
 std = [0.229, 0.224, 0.225]
 device = 'cuda'
 
-class DeeplabModel(pl.LightningModule):
+class StereoProjectionModel(pl.LightningModule):
 
     def __init__(self, lr=7e-3):
         super().__init__()
