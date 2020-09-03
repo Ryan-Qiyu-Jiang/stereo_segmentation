@@ -143,7 +143,9 @@ class StereoDataset(torch.utils.data.Dataset):
                 seeds[img_class,y-5:y+5,x-5:x+5] = 1
             seeds[len(CLASS_NAMES)] = 0.5
         
-        img_pair = torch.cat([input_img_left, input_img_right], dim=0)
+        tensor_left = torch.unsqueeze(input_img_left, dim=0)
+        tensor_right = torch.unsqueeze(input_img_right, dim=0)
+        img_pair = torch.cat([tensor_left, tensor_right], dim=0)
         return img_pair, seeds
 
     def __len__(self):
