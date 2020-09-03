@@ -102,7 +102,7 @@ class StereoProjectionModel(pl.LightningModule):
         pix_coords = self.project_3d(cam_points, cam['K'], T)
         pred_seg_s = F.grid_sample(seg_left, pix_coords, padding_mode="border")
 
-        reprojection_loss = self.compute_reprojection_loss(pred_seg_s, seg_right)
+        reprojection_loss = self.compute_reprojection_loss(pred_seg_s, seg_right).mean()
         return reprojection_loss
 
 
@@ -140,8 +140,7 @@ class StereoProjectionModel(pl.LightningModule):
             self.loss_decomp['dCRF'] += [0]
         
         if self.ploss_weight != 0:
-            p_loss = self.reprojection_loss(seg_left, seg_right, depth_output, cam)
-            import IPython; IPython.embed()
+            p_loss = self.reprojection_loss(seg_left, seg_right, depth_output, cam).item()
             self.loss_decomp['proj'] += [p_loss.detach()]
         else:
             p_loss = 0
