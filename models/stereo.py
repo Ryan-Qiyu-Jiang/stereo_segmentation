@@ -144,7 +144,7 @@ class StereoProjectionModel(pl.LightningModule):
             self.loss_decomp['proj'] += [p_loss.detach()]
         else:
             p_loss = 0
-            self.loss_decomp['dCRF'] += [0]
+            self.loss_decomp['proj'] += [0]
 
         loss = seed_loss + densecrfloss + self.ploss_weight * p_loss
         return loss
