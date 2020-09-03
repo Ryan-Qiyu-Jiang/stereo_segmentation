@@ -42,7 +42,7 @@ class StereoProjectionModel(pl.LightningModule):
         loaded_dict_enc = torch.load(encoder_path, map_location=device)
         feed_height = loaded_dict_enc['height']
         feed_width = loaded_dict_enc['width']
-        filtered_dict_enc = {k: v for k, v in loaded_dict_enc.items() if k in self.encoder.state_dict()}
+        filtered_dict_enc = {k: v for k, v in loaded_dict_enc.items() if k in self.depth_encoder.state_dict()}
         self.depth_encoder.load_state_dict(filtered_dict_enc)
         self.depth_encoder.eval()
         loaded_dict = torch.load(depth_decoder_path, map_location=device)
