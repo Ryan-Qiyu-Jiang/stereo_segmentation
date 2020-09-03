@@ -116,7 +116,6 @@ class StereoProjectionModel(pl.LightningModule):
         seg = self(x)
 
         x_left = x[0::2,::]
-        x_right = x[1::2,::]
         seg_left = seg[0::2,::]
         seg_right = seg[1::2,::]
         seeds_left = seeds[0::2,::]
@@ -134,6 +133,7 @@ class StereoProjectionModel(pl.LightningModule):
             denormalized_image = denormalizeimage(x, mean=mean, std=std)
             densecrfloss = self.densecrflosslayer(denormalized_image, probs, roi)
             self.loss_decomp['dCRF'] += [densecrfloss.detach()]
+            import IPython; IPython.embed()
         else:
             densecrfloss = 0
             self.loss_decomp['dCRF'] += [0]
