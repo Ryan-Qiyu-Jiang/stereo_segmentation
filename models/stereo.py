@@ -140,7 +140,8 @@ class StereoProjectionModel(pl.LightningModule):
             self.loss_decomp['dCRF'] += [0]
         
         if self.ploss_weight != 0:
-            p_loss = self.reprojection_loss(seg_left, seg_right, depth_output, cam).item()
+            p_loss = self.reprojection_loss(seg_left, seg_right, depth_output, cam)
+            import IPython; IPython.embed()
             self.loss_decomp['proj'] += [p_loss.detach()]
         else:
             p_loss = 0
