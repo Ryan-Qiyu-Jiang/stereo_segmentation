@@ -67,7 +67,7 @@ class StereoProjectionModel(pl.LightningModule):
         self.backproject_depth = BackprojectDepth(batch_size, height, width)
         self.project_3d = Project3D(batch_size, height, width)
         self.ssim = SSIM()
-        self.no_ssim = False
+        self.no_ssim = True
 
     def forward(self, x):
         return self.model(x) 
@@ -140,7 +140,7 @@ class StereoProjectionModel(pl.LightningModule):
             self.loss_decomp['dCRF'] += [0]
         
         if self.ploss_weight != 0:
-            p_loss = self.reprojection_loss(seg_left, seg_right, depth_output, cam)
+            p_loss = self.reprojection_loss(seg_left, seg_right, depth_output, cam).item()
             self.loss_decomp['proj'] += [p_loss.detach()]
         else:
             p_loss = 0
