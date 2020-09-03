@@ -145,7 +145,7 @@ class StereoProjectionModel(pl.LightningModule):
         else:
             p_loss = 0
             self.loss_decomp['proj'] += [0]
-
+        import IPython; IPython.embed()
         loss = seed_loss + densecrfloss + self.ploss_weight * p_loss
         return loss
 
