@@ -67,6 +67,7 @@ class StereoProjectionModel(pl.LightningModule):
         self.backproject_depth = BackprojectDepth(batch_size, height, width)
         self.project_3d = Project3D(batch_size, height, width)
         self.ssim = SSIM()
+        self.no_ssim = False
 
     def forward(self, x):
         return self.model(x) 
@@ -83,7 +84,7 @@ class StereoProjectionModel(pl.LightningModule):
         abs_diff = torch.abs(target - pred)
         l1_loss = abs_diff.mean(1, True)
 
-        if self.opt.no_ssim:
+        if self.no_ssim:
             reprojection_loss = l1_loss
         else:
             ssim_loss = self.ssim(pred, target).mean(1, True)
