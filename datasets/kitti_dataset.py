@@ -147,6 +147,7 @@ class StereoDataset(torch.utils.data.Dataset):
             seeds = torch.zeros(len(CLASS_NAMES)+1, 192, 640)
             seeds[len(CLASS_NAMES)] = 0.5
         
+        print(use_pair, img_path)
         return input_img, seeds
 
     def __len__(self):
