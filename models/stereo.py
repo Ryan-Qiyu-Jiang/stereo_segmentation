@@ -28,7 +28,7 @@ class StereoProjectionModel(pl.LightningModule):
     def __init__(self, lr=7e-3):
         super().__init__()
         self.num_classes = 9
-        self.model = DeepLab(num_classes=self.num_classes)
+        self.model = DeepLab(num_classes=self.num_classes) 
 
         self.depth_encoder = networks.ResnetEncoder(18, True)
         self.depth_decoder = networks.DepthDecoder(
