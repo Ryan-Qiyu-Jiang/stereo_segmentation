@@ -128,14 +128,15 @@ class StereoProjectionModel(pl.LightningModule):
         if self.rloss_weight != 0:
             probs = nn.Softmax(dim=1)(seg)
             resize_img = nn.Upsample(size=x.shape[2:], mode='bilinear', align_corners=True)
-            roi = torch.ones_like(seeds_flat)
+            batch_size, num_classes, h, w = seg.shape
+            roi = torch.ones(batch_size, 1, h, w)
             roi = resize_img(roi.unsqueeze(1).float()).squeeze(1)
             denormalized_image = denormalizeimage(x, mean=mean, std=std)
             densecrfloss = self.densecrflosslayer(denormalized_image, probs, roi)
             if seed_loss.is_cuda:
                 densecrfloss = densecrfloss.cuda()
             self.loss_decomp['dCRF'] += [densecrfloss.detach()]
-            import IPython; IPython.embed()
+            # import IPython; IPython.embed()
         else:
             densecrfloss = 0
             self.loss_decomp['dCRF'] += [0]
