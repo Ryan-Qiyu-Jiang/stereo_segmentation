@@ -9,6 +9,7 @@ from skimage.transform import resize
 import sys, os
 import pandas as pd
 import numpy as np
+import copy
 
 CLASS_NAMES = ['DontCare','Car', 'Van','Truck','Pedestrian','Person_sitting','Cyclist','Tram','Misc']
 mean = [0.485, 0.456, 0.406]
@@ -104,11 +105,35 @@ class SingleDataset(torch.utils.data.Dataset):
         return self.length
 
 class StereoDataset(torch.utils.data.Dataset):
-    def __init__(self, list_path):
+    def __init__(self, list_path, width=640, height=192):
         with open(list_path, 'r') as file:
             self.img_files = file.readlines()
         self.label_files = [path.replace('images', 'labels').replace('.png', '.txt').replace('.jpg', '.txt') for path in self.img_files]
         self.max_objects = 50
+        self.width = width
+        self.height = height
+        # NOTE: Make sure your intrinsics matrix is *normalized* by the original image size    
+        self.K = np.array([[0.58, 0, 0.5, 0],
+                           [0, 1.92, 0.5, 0],
+                           [0, 0, 1, 0],
+                           [0, 0, 0, 1]], dtype=np.float32)
+        K = self.K.copy()
+        K[0, :] *= self.width
+        K[1, :] *= self.height
+
+        inv_K = np.linalg.pinv(K)
+
+        self.cam = {}
+        self.cam["K"] = torch.from_numpy(K)
+        self.cam["inv_K"] = torch.from_numpy(inv_K)
+        
+    def get_stereo_T(side='l', do_flip=False)
+        stereo_T = np.eye(4, dtype=np.float32)
+        baseline_sign = -1 if do_flip else 1
+        side_sign = -1 if side == "l" else 1
+        stereo_T[0, 3] = side_sign * baseline_sign * 0.1
+
+        return torch.from_numpy(stereo_T)
 
     def __getitem__(self, file_index):
         
@@ -117,7 +142,7 @@ class StereoDataset(torch.utils.data.Dataset):
         img_left = Image.open(left_img_path)
         img_right = Image.open(right_img_path)
 
-        transform = transforms.Compose([transforms.Resize((192, 640), interpolation=2),
+        transform = transforms.Compose([transforms.Resize((self.height, self.width), interpolation=2),
                                         # transforms.RandomHorizontalFlip(p=0.5), 
                                         transforms.ToTensor(), 
                                         transforms.Normalize(mean, std)])
@@ -146,7 +171,11 @@ class StereoDataset(torch.utils.data.Dataset):
         tensor_left = torch.unsqueeze(input_img_left, dim=0)
         tensor_right = torch.unsqueeze(input_img_right, dim=0)
         img_pair = torch.cat([tensor_left, tensor_right], dim=0)
-        return img_pair, seeds
+
+        cam = copy.deepcopy(self.cam)
+        cam['stereo_T'] = self.get_stereo_T(side='l', do_flip=False)
+
+        return img_pair, seeds, cam
 
     def __len__(self):
         return 2*len(self.img_files)
