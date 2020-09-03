@@ -17,7 +17,7 @@ def denormalizeimage(images, mean=(0., 0., 0.), std=(1., 1., 1.)):
     images *=255.0
     # N*H*W*C to N*C*H*W
     images = images.transpose((0,3,1,2))
-    return torch.tensor(images).cuda()
+    return torch.tensor(images)
 
 def show(img):
     npimg = img.numpy()

@@ -132,6 +132,8 @@ class StereoProjectionModel(pl.LightningModule):
             roi = resize_img(roi.unsqueeze(1).float()).squeeze(1)
             denormalized_image = denormalizeimage(x, mean=mean, std=std)
             densecrfloss = self.densecrflosslayer(denormalized_image, probs, roi)
+            if seed_loss.is_cuda:
+                densecrfloss = densecrfloss.cuda()
             self.loss_decomp['dCRF'] += [densecrfloss.detach()]
             import IPython; IPython.embed()
         else:
