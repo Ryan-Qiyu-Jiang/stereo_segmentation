@@ -49,7 +49,7 @@ class StereoProjectionModel(pl.LightningModule):
         self.depth_decoder.eval()
 
         self.train_loss = []
-        self.loss_decomp = {'seed':[], 'dCRF':[]}
+        self.loss_decomp = {'seed':[], 'dCRF':[], 'proj':[]}
         self.val_loss = []
         self.test_loss = []
         self.rloss_weight = 2e-9 #2e-9
