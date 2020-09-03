@@ -104,6 +104,10 @@ class StereoProjectionModel(pl.LightningModule):
     def get_loss(self, batch):
         """Assume batch size of 2, being the stereo pair."""
         x, seeds, cam = batch
+        batch_size, _, channels, height, width = x.shape
+        x = x.view(-1, channels, height, width)
+        batch_size, _, num_classes, height, width = x.shape
+        seeds = seeds.view(-1, num_classes, height, width)
         seg = self(x)
 
         features = self.depth_encoder(x[0])
