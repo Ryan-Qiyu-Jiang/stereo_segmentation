@@ -133,14 +133,14 @@ class StereoProjectionModel(pl.LightningModule):
             roi = torch.ones_like(seeds_flat)
             roi = resize_img(roi.unsqueeze(1).float()).squeeze(1)
             denormalized_image = denormalizeimage(x, mean=mean, std=std)
-            densecrfloss = self.densecrflosslayer(denormalized_image, probs, roi).item()
+            densecrfloss = self.densecrflosslayer(denormalized_image, probs, roi)
             self.loss_decomp['dCRF'] += [densecrfloss.detach()]
         else:
             densecrfloss = 0
             self.loss_decomp['dCRF'] += [0]
         
         if self.ploss_weight != 0:
-            p_loss = self.reprojection_loss(seg_left, seg_right, depth_output, cam).item()
+            p_loss = self.reprojection_loss(seg_left, seg_right, depth_output, cam)
             self.loss_decomp['proj'] += [p_loss.detach()]
         else:
             p_loss = 0
