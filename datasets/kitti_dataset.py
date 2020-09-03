@@ -116,7 +116,7 @@ class StereoDataset(torch.utils.data.Dataset):
         use_pair = data_index % 2 == 0
         img_path = self.img_files[file_index % len(self.img_files)].rstrip()
         if use_pair:
-            img_path = img_path.replace('images', 'pairs')
+            img_path = img_path.replace('images', 'right_images')
         img = Image.open(img_path)
         transform = transforms.Compose([transforms.Resize((192, 640), interpolation=2),
                                         # transforms.RandomHorizontalFlip(p=0.5), 
