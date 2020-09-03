@@ -32,7 +32,7 @@ class StereoProjectionModel(pl.LightningModule):
 
         self.depth_encoder = networks.ResnetEncoder(18, True)
         self.depth_decoder = networks.DepthDecoder(
-            num_ch_enc=self.depth_encoder.num_ch_enc, scales=range(5))
+            num_ch_enc=self.depth_encoder.num_ch_enc, scales=range(4))
 
         model_name = 'mono+stereo_640x192'
         model_path = os.path.join("models","monodepth2_weights", model_name)
