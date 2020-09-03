@@ -127,7 +127,7 @@ class StereoDataset(torch.utils.data.Dataset):
         self.cam["K"] = torch.from_numpy(K)
         self.cam["inv_K"] = torch.from_numpy(inv_K)
         
-    def get_stereo_T(side='l', do_flip=False)
+    def get_stereo_T(self, side='l', do_flip=False):
         stereo_T = np.eye(4, dtype=np.float32)
         baseline_sign = -1 if do_flip else 1
         side_sign = -1 if side == "l" else 1
