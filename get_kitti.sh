@@ -15,7 +15,6 @@ mkdir kitti/right_images
 mv training/image_2 kitti/images/train 
 mv testing/image_2 kitti/images/test 
 mv training/image_3 kitti/right_images/train 
-mv testing/image_3 kitti/right_images/test 
 mv training/label_2 kitti/labels/train
 
 cd kitti/images/train && ls -d $PWD/* > ../../train.txt
