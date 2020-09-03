@@ -103,6 +103,51 @@ class SingleDataset(torch.utils.data.Dataset):
     def __len__(self):
         return self.length
 
+class StereoDataset(torch.utils.data.Dataset):
+    def __init__(self, list_path):
+        with open(list_path, 'r') as file:
+            self.img_files = file.readlines()
+        self.label_files = [path.replace('images', 'labels').replace('.png', '.txt').replace('.jpg', '.txt') for path in self.img_files]
+        self.max_objects = 50
+
+    def __getitem__(self, data_index):
+        
+        file_index = int(data_index/2)
+        use_pair = data_index % 2 == 0
+        img_path = self.img_files[file_index % len(self.img_files)].rstrip()
+        if use_pair:
+            img_path = img_path.replace('images', 'pairs')
+        img = Image.open(img_path)
+        transform = transforms.Compose([transforms.Resize((192, 640), interpolation=2),
+                                        # transforms.RandomHorizontalFlip(p=0.5), 
+                                        transforms.ToTensor(), 
+                                        transforms.Normalize(mean, std)])
+        input_img = transform(img)
+
+        label_path = self.label_files[file_index % len(self.img_files)].rstrip()
+        seeds = None
+        index = None
+        if os.path.exists(label_path):
+          labels_df = pd.read_csv(label_path, header=None, sep="\s+")
+          labels_df[0] = np.array([CLASS_NAMES.index(n) for n in labels_df[0]])
+          seeds = torch.zeros(len(CLASS_NAMES)+1, 192, 640)
+          w, h = (640, 192)
+          w1, h1 = img.size
+          bbox = labels_df.iloc[:, 4:8].values
+          index = np.zeros((bbox.shape[0], 3))
+          index[:, 0] = labels_df[0].values
+          index[:, 2] = (bbox[:,0]+bbox[:,2])/2/w1*w
+          index[:, 1] = (bbox[:,1]+bbox[:,3])/2/h1*h
+          index = np.round(index).astype(int)
+          for img_class, y, x in index:
+            seeds[img_class,y-5:y+5,x-5:x+5] = 1
+          seeds[len(CLASS_NAMES)] = 0.5
+        
+        return input_img, seeds
+
+    def __len__(self):
+        return 2*len(self.img_files)
+
 # train_path = '/content/kitti/train.txt'
 # train_dataset = SingleDataset(train_path)
 # train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=1)

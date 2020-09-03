@@ -111,23 +111,28 @@ class StereoProjectionModel(pl.LightningModule):
 
         criterion = torch.nn.CrossEntropyLoss(ignore_index=self.num_classes)
         seeds_flat = torch.argmax(seeds, dim=1)
-        seed_loss = criterion(seg, seeds_flat)
+        seed_loss = criterion(seg[0:1,::], seeds_flat[0:1,::])
         self.loss_decomp['seed'] += [seed_loss.detach()]
-        if self.rloss_weight == 0:
-          self.loss_decomp['dCRF'] += [0]
-          return seed_loss
 
-        probs = nn.Softmax(dim=1)(seg)
-        resize_img = nn.Upsample(size=x.shape[2:], mode='bilinear', align_corners=True)
-        roi = resize_img(seeds_flat.unsqueeze(1).float()).squeeze(1)
-        denormalized_image = denormalizeimage(x, mean=mean, std=std)
-        densecrfloss = self.densecrflosslayer(denormalized_image, probs, roi)
-        self.loss_decomp['dCRF'] += [densecrfloss.detach()]
+        if self.rloss_weight != 0:
+            probs = nn.Softmax(dim=1)(seg)
+            resize_img = nn.Upsample(size=x.shape[2:], mode='bilinear', align_corners=True)
+            roi = resize_img(seeds_flat.unsqueeze(1).float()).squeeze(1)
+            denormalized_image = denormalizeimage(x, mean=mean, std=std)
+            densecrfloss = self.densecrflosslayer(denormalized_image, probs, roi).item()
+            self.loss_decomp['dCRF'] += [densecrfloss.detach()]
+        else:
+            densecrfloss = 0
+            self.loss_decomp['dCRF'] += [0]
         
-        p_loss = self.reprojection_loss(x, seg, depth_output, cam)
-        self.loss_decomp['proj'] += [p_loss.detach()]
+        if self.ploss_weight != 0:
+            p_loss = self.reprojection_loss(x, seg, depth_output, cam)
+            self.loss_decomp['proj'] += [p_loss.detach()]
+        else:
+            p_loss = 0
+            self.loss_decomp['dCRF'] += [0]
 
-        loss = seed_loss + densecrfloss.item() + self.ploss_weight * p_loss
+        loss = seed_loss + densecrfloss + self.ploss_weight * p_loss
         return loss
 
     def training_step(self, batch, batch_idx):
