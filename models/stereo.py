@@ -25,7 +25,7 @@ device = 'cuda'
 
 class StereoProjectionModel(pl.LightningModule):
 
-    def __init__(self, lr=7e-3, batch_size=4, width=640, height=192):
+    def __init__(self, lr=7e-3, batch_size=1, width=640, height=192):
         super().__init__()
         self.num_classes = 9
         self.model = DeepLab(num_classes=self.num_classes) 
