@@ -77,7 +77,7 @@ class StereoProjectionModel(pl.LightningModule):
                         {'params': self.model.get_10x_lr_params(), 'lr': self.lr * 10}]
         optimizer = torch.optim.SGD(train_params, momentum=0.9, weight_decay=0.0005)
         scheduler = ReduceLROnPlateau(optimizer, 'min')
-        return optimizer, scheduler
+        return [optimizer], [scheduler]
 
     def compute_reprojection_loss(self, pred, target):
         """Computes reprojection loss between a batch of predicted and target images
