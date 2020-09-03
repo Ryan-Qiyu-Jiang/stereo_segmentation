@@ -115,9 +115,15 @@ class StereoProjectionModel(pl.LightningModule):
         seeds = seeds.view(-1, num_classes, height, width)
         seg = self(x)
 
+        x_left = x[0::2,::]
+        x_right = x[1::2,::]
+        seg_left = seg[0::2,::]
+        seg_right = seg[1::2,::]
+        seeds_left = seeds[0::2,::]
+
         criterion = torch.nn.CrossEntropyLoss(ignore_index=self.num_classes)
-        seeds_flat = torch.argmax(seeds, dim=1)
-        seed_loss = criterion(seg[0:1,::], seeds_flat[0:1,::])
+        seeds_flat = torch.argmax(seeds_left, dim=1)
+        seed_loss = criterion(seg_left, seeds_flat)
         self.loss_decomp['seed'] += [seed_loss.detach()]
 
         if self.rloss_weight != 0:
@@ -133,10 +139,6 @@ class StereoProjectionModel(pl.LightningModule):
             self.loss_decomp['dCRF'] += [0]
         
         if self.ploss_weight != 0:
-            x_left = x[0::2,::]
-            x_right = x[1::2,::]
-            seg_left = seg[0::2,::]
-            seg_right = seg[1::2,::]
             features = self.depth_encoder(x_left)
             depth_output = self.depth_decoder(features)
             p_loss = self.reprojection_loss(seg_left, seg_right, depth_output, cam)
