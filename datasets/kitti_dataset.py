@@ -132,7 +132,7 @@ class StereoDataset(torch.utils.data.Dataset):
             labels_df[0] = np.array([CLASS_NAMES.index(n) for n in labels_df[0]])
             seeds = torch.zeros(len(CLASS_NAMES)+1, 192, 640)
             w, h = (640, 192)
-            w1, h1 = img.size
+            w1, h1 = img_left.size
             bbox = labels_df.iloc[:, 4:8].values
             index = np.zeros((bbox.shape[0], 3))
             index[:, 0] = labels_df[0].values
