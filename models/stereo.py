@@ -36,7 +36,7 @@ class StereoProjectionModel(pl.LightningModule):
             num_output_channels=self.num_classes)
 
         model_name = 'mono+stereo_640x192'
-        model_path = os.path.join("models", model_name)
+        model_path = os.path.join("models","monodepth2_weights", model_name)
         encoder_path = os.path.join(model_path, "encoder.pth")
         depth_decoder_path = os.path.join(model_path, "depth.pth")
         loaded_dict_enc = torch.load(encoder_path, map_location=device)
