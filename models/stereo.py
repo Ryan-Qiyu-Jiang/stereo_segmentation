@@ -129,7 +129,7 @@ class StereoProjectionModel(pl.LightningModule):
             probs = nn.Softmax(dim=1)(seg)
             resize_img = nn.Upsample(size=x.shape[2:], mode='bilinear', align_corners=True)
             batch_size, num_classes, h, w = seg.shape
-            roi = torch.ones(batch_size, 1, h, w)
+            roi = torch.ones(batch_size, h, w)
             roi = resize_img(roi.unsqueeze(1).float()).squeeze(1)
             denormalized_image = denormalizeimage(x, mean=mean, std=std)
             densecrfloss = self.densecrflosslayer(denormalized_image, probs, roi)
