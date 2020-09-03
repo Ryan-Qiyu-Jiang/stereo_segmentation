@@ -1,1 +1,1 @@
-from .kitti_dataset import SingleDataset, ListDataset, SeedsDataset
+from .kitti_dataset import SingleDataset, ListDataset, SeedsDataset, StereoDataset
