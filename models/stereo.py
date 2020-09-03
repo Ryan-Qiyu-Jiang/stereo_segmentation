@@ -25,7 +25,7 @@ device = 'cuda'
 
 class StereoProjectionModel(pl.LightningModule):
 
-    def __init__(self, lr=7e-3):
+    def __init__(self, lr=7e-3, batch_size=4, width=640, height=192):
         super().__init__()
         self.num_classes = 9
         self.model = DeepLab(num_classes=self.num_classes) 
@@ -58,10 +58,15 @@ class StereoProjectionModel(pl.LightningModule):
         self.rloss_sig_xy = 100
         self.ploss_weight = 0.5
         self.lr = lr
+        self.width = width
+        self.height = height
         self.densecrflosslayer = DenseCRFLoss(weight=self.rloss_weight, 
                                               sigma_rgb=self.rloss_sig_rgb, 
                                               sigma_xy=self.rloss_sig_xy, 
                                               scale_factor=self.rloss_scale)
+        self.backproject_depth = BackprojectDepth(batch_size, height, width)
+        self.project_3d = Project3D(batch_size, height, width)
+        self.ssim = SSIM()
 
     def forward(self, x):
         return self.model(x) 
@@ -86,17 +91,17 @@ class StereoProjectionModel(pl.LightningModule):
 
         return reprojection_loss
 
-    def reprojection_loss(self, x, seg, depth_output, cam):
+    def reprojection_loss(self, seg_left, seg_right, depth_output, cam):
         disp = F.interpolate(depth_output[("disp", 0)], 
-                             size=x.shape[2:], 
+                             size=seg_left.shape[2:], 
                              mode="bilinear", align_corners=False)
         _, depth = disp_to_depth(disp, 0.1, 100)
         T = cam['stereo_T']
         cam_points = self.backproject_depth(depth, cam['inv_K'])
         pix_coords = self.project_3d(cam_points, cam['K'], T)
-        pred_seg_s = F.grid_sample(seg[0], pix_coords, padding_mode="border")
+        pred_seg_s = F.grid_sample(seg_left, pix_coords, padding_mode="border")
 
-        reprojection_loss = self.compute_reprojection_loss(pred_seg_s, seg[1])
+        reprojection_loss = self.compute_reprojection_loss(pred_seg_s, seg_right)
         return reprojection_loss
 
 
@@ -109,7 +114,11 @@ class StereoProjectionModel(pl.LightningModule):
         seeds = seeds.view(-1, num_classes, height, width)
         seg = self(x)
 
-        features = self.depth_encoder(x[0])
+        x_left = x[0::2,::]
+        x_right = x[1::2,::]
+        seg_left = seg[0::2,::]
+        seg_right = seg[1::2,::]
+        features = self.depth_encoder(x_left)
         depth_output = self.depth_decoder(features)
 
         criterion = torch.nn.CrossEntropyLoss(ignore_index=self.num_classes)
@@ -120,7 +129,8 @@ class StereoProjectionModel(pl.LightningModule):
         if self.rloss_weight != 0:
             probs = nn.Softmax(dim=1)(seg)
             resize_img = nn.Upsample(size=x.shape[2:], mode='bilinear', align_corners=True)
-            roi = resize_img(seeds_flat.unsqueeze(1).float()).squeeze(1)
+            roi = torch.ones_like(seeds_flat)
+            roi = resize_img(roi.unsqueeze(1).float()).squeeze(1)
             denormalized_image = denormalizeimage(x, mean=mean, std=std)
             densecrfloss = self.densecrflosslayer(denormalized_image, probs, roi).item()
             self.loss_decomp['dCRF'] += [densecrfloss.detach()]
@@ -129,7 +139,7 @@ class StereoProjectionModel(pl.LightningModule):
             self.loss_decomp['dCRF'] += [0]
         
         if self.ploss_weight != 0:
-            p_loss = self.reprojection_loss(x, seg, depth_output, cam)
+            p_loss = self.reprojection_loss(seg_left, seg_right, depth_output, cam)
             self.loss_decomp['proj'] += [p_loss.detach()]
         else:
             p_loss = 0
