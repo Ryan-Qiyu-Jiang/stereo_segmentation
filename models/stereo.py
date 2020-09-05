@@ -121,7 +121,7 @@ class StereoProjectionModel(pl.LightningModule):
         # import IPython; IPython.embed()
 
         # denormalized_image = denormalizeimage(disp_img, mean=mean, std=std)
-        densecrfloss = self.densecrflosslayer(disp_img, probs, roi)
+        densecrfloss = self.densecrflosslayer(disp_img.cpu(), probs, roi)
         return densecrfloss
 
     def get_loss(self, batch):
