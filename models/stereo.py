@@ -114,8 +114,13 @@ class StereoProjectionModel(pl.LightningModule):
         disp = F.interpolate(depth_output[("disp", 0)], 
                              size=x.shape[2:], 
                              mode="bilinear", align_corners=False)
-        disp = disp.unsqueeze(0)
-        disp_img = torch.cat([disp, disp, disp], dim=0)
+        min_disp = torch.min(disp)
+        max_disp = torch.max(disp)
+        disp = (disp-min_disp)/(max_disp-min_disp)*255.0
+        disp = disp.unsqueeze(1)
+        disp_img = torch.cat([disp, disp, disp], dim=1)
+        import IPython; IPython.embed()
+
         denormalized_image = denormalizeimage(disp_img, mean=mean, std=std)
         densecrfloss = self.densecrflosslayer(denormalized_image, probs, roi)
         return densecrfloss
