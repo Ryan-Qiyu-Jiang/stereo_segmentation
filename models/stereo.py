@@ -117,7 +117,7 @@ class StereoProjectionModel(pl.LightningModule):
         min_disp = torch.min(disp)
         max_disp = torch.max(disp)
         disp = (disp-min_disp)/(max_disp-min_disp)*255.0
-        disp_img = torch.cat([disp, disp, disp], dim=1)
+        disp_img = torch.cat([disp, disp, disp], dim=1).detach()
         # import IPython; IPython.embed()
 
         denormalized_image = denormalizeimage(disp_img, mean=mean, std=std)
