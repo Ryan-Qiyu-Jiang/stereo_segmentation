@@ -120,8 +120,8 @@ class StereoProjectionModel(pl.LightningModule):
         disp_img = torch.cat([disp, disp, disp], dim=1).detach()
         # import IPython; IPython.embed()
 
-        denormalized_image = denormalizeimage(disp_img, mean=mean, std=std)
-        densecrfloss = self.densecrflosslayer(denormalized_image, probs, roi)
+        # denormalized_image = denormalizeimage(disp_img, mean=mean, std=std)
+        densecrfloss = self.densecrflosslayer(disp_img, probs, roi)
         return densecrfloss
 
     def get_loss(self, batch):
