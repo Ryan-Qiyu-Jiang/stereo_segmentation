@@ -105,6 +105,20 @@ class StereoProjectionModel(pl.LightningModule):
         reprojection_loss = self.compute_reprojection_loss(pred_seg_s, seg_right).mean()
         return reprojection_loss
 
+    def get_rloss(self, seg, x, depth_output):
+        probs = nn.Softmax(dim=1)(seg)
+        resize_img = nn.Upsample(size=x.shape[2:], mode='bilinear', align_corners=True)
+        batch_size, num_classes, h, w = seg.shape
+        roi = torch.ones(batch_size, h, w)
+        roi = resize_img(roi.unsqueeze(1).float()).squeeze(1)
+        disp = F.interpolate(depth_output[("disp", 0)], 
+                             size=x.shape[2:], 
+                             mode="bilinear", align_corners=False)
+        disp = disp.unsqueeze(0)
+        disp_img = torch.cat([disp, disp, disp], dim=0)
+        denormalized_image = denormalizeimage(disp_img, mean=mean, std=std)
+        densecrfloss = self.densecrflosslayer(denormalized_image, probs, roi)
+        return densecrfloss
 
     def get_loss(self, batch):
         """Assume batch size of 2, being the stereo pair."""
@@ -125,14 +139,14 @@ class StereoProjectionModel(pl.LightningModule):
         seed_loss = criterion(seg_left, seeds_flat)
         self.loss_decomp['seed'] += [seed_loss.detach()]
 
+        features = None
+        depth_output = None
+        if self.rloss_weight != 0 or self.ploss_weight != 0 :
+            features = self.depth_encoder(x_left)
+            depth_output = self.depth_decoder(features)
+
         if self.rloss_weight != 0:
-            probs = nn.Softmax(dim=1)(seg)
-            resize_img = nn.Upsample(size=x.shape[2:], mode='bilinear', align_corners=True)
-            batch_size, num_classes, h, w = seg.shape
-            roi = torch.ones(batch_size, h, w)
-            roi = resize_img(roi.unsqueeze(1).float()).squeeze(1)
-            denormalized_image = denormalizeimage(x, mean=mean, std=std)
-            densecrfloss = self.densecrflosslayer(denormalized_image, probs, roi)
+            densecrfloss = self.get_rloss(seg_left, x_left, depth_output)
             if seed_loss.is_cuda:
                 densecrfloss = densecrfloss.cuda()
             self.loss_decomp['dCRF'] += [densecrfloss.detach()]
@@ -142,8 +156,6 @@ class StereoProjectionModel(pl.LightningModule):
             self.loss_decomp['dCRF'] += [0]
         
         if self.ploss_weight != 0:
-            features = self.depth_encoder(x_left)
-            depth_output = self.depth_decoder(features)
             p_loss = self.reprojection_loss(seg_left, seg_right, depth_output, cam)
             self.loss_decomp['proj'] += [p_loss.detach()]
         else:
@@ -168,9 +180,17 @@ class StereoProjectionModel(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         loss = self.get_loss(batch)
-        result = pl.EvalResult(checkpoint_on=loss)
         self.val_loss += [loss.detach()]
-        return result
+        logs = {
+            'val_loss': loss.detach(),
+            'val_seed': self.loss_decomp['seed'][-1],
+            'val_dCRF': self.loss_decomp['dCRF'][-1],
+            'val_proj': self.loss_decomp['proj'][-1]
+        }
+        return {
+            'loss': loss,
+            'log':logs
+        }
 
     def test_step(self, batch, batch_idx):
         loss = self.get_loss(batch)
