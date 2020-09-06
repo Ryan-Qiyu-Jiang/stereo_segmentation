@@ -136,13 +136,14 @@ class StereoDataset(torch.utils.data.Dataset):
 
         return torch.from_numpy(stereo_T)
 
-def get_bg_seeds(self, bbox, w1, h1, num_seeds=1):
-    potential_points = np.random.rand(10, 2) # 10 random points x, y
-    valid_points_mask = ((potential_points[:,0] > bbox[:,2]/w1) & 
-                            (potential_points[:0] < bbox[:,0]/w1) &
-                            (potential_points[:1] > bbox[:,3]/h1) &
-                            (potential_points[:1] < bbox[:,1]/h1))
-    return potential_points[valid_points_mask][:num_seeds]
+    def get_bg_seeds(self, bbox, w1, h1, num_seeds=1):
+        pass
+        # potential_points = np.random.rand(10, 2) # 10 random points x, y
+        # valid_points_mask = ((potential_points[:,0] > bbox[:,2]/w1) & 
+        #                         (potential_points[:0] < bbox[:,0]/w1) &
+        #                         (potential_points[:1] > bbox[:,3]/h1) &
+        #                         (potential_points[:1] < bbox[:,1]/h1))
+        # return potential_points[valid_points_mask][:num_seeds]
 
     def __getitem__(self, file_index):
         
