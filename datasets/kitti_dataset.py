@@ -180,7 +180,7 @@ class StereoDataset(torch.utils.data.Dataset):
                 if img_class != 0:
                     seeds[img_class,y-5:y+5,x-5:x+5] = 1
             seeds[len(CLASS_NAMES)] = 0.5
-            bg_seeds = self.get_bg_seeds(bbox, w1, h1)
+            bg_seeds = self.get_bg_seeds(bbox, w1, h1, num_seeds=5)
             for x_frac, y_frac in bg_seeds:
                 x = int(x_frac*w)
                 y = int(y_frac*h)
