@@ -148,7 +148,7 @@ class StereoDataset(torch.utils.data.Dataset):
         return potential_points #potential_points[valid_points_mask][:num_seeds]
 
     def __getitem__(self, file_index):
-        
+        np.random.seed(file_index)
         left_img_path = self.img_files[file_index % len(self.img_files)].rstrip()
         right_img_path = left_img_path.replace('images', 'right_images')
         img_left = Image.open(left_img_path)
