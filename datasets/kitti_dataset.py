@@ -145,7 +145,7 @@ class StereoDataset(torch.utils.data.Dataset):
                                     (potential_points[:,1] > bbox[i,3]/h1) |
                                     (potential_points[:,1] < bbox[i,1]/h1))
             valid_points_mask &= not_in_box_mask
-        return potential_points #potential_points[valid_points_mask][:num_seeds]
+        return potential_points[valid_points_mask][:num_seeds]
 
     def __getitem__(self, file_index):
         np.random.seed(file_index)
