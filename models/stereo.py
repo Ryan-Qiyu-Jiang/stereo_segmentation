@@ -60,7 +60,7 @@ class StereoProjectionModel(pl.LightningModule):
         self.lr = lr
         self.width = width
         self.height = height
-        self.densecrflosslayer = DenseCRFLoss(weight=self.rloss_weight, 
+        self.densecrflosslayer = DenseCRFLoss(weight=1, 
                                               sigma_rgb=self.rloss_sig_rgb, 
                                               sigma_xy=self.rloss_sig_xy, 
                                               scale_factor=self.rloss_scale)
@@ -124,7 +124,7 @@ class StereoProjectionModel(pl.LightningModule):
         disp_img = torch.cat([disp, disp, disp], dim=1).detach()
         # import IPython; IPython.embed()
         densecrfloss = self.densecrflosslayer(disp_img.cpu(), probs, roi)
-        return densecrfloss
+        return self.rloss_weight*densecrfloss
 
     def get_loss(self, batch):
         """Assume batch size of 2, being the stereo pair."""
