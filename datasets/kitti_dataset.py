@@ -137,13 +137,15 @@ class StereoDataset(torch.utils.data.Dataset):
         return torch.from_numpy(stereo_T)
 
     def get_bg_seeds(self, bbox, w1, h1, num_seeds=1):
-        pass
-        # potential_points = np.random.rand(10, 2) # 10 random points x, y
-        # valid_points_mask = ((potential_points[:,0] > bbox[:,2]/w1) & 
-        #                         (potential_points[:0] < bbox[:,0]/w1) &
-        #                         (potential_points[:1] > bbox[:,3]/h1) &
-        #                         (potential_points[:1] < bbox[:,1]/h1))
-        # return potential_points[valid_points_mask][:num_seeds]
+        potential_points = np.random.rand(10, 2) # 10 random points x, y
+        valid_points_mask = np.ones(10, dtype=bool)
+        for i in range(len(bbox)):
+            not_in_box_mask = ((potential_points[:,0] > bbox[i,2]/w1) | 
+                                    (potential_points[:,0] < bbox[i,0]/w1) |
+                                    (potential_points[:,1] > bbox[i,3]/h1) |
+                                    (potential_points[:,1] < bbox[i,1]/h1))
+            valid_points_mask &= not_in_box_mask
+        return potential_points[valid_points_mask][:num_seeds]
 
     def __getitem__(self, file_index):
         
@@ -177,7 +179,6 @@ class StereoDataset(torch.utils.data.Dataset):
             for img_class, y, x in index:
                 seeds[img_class,y-5:y+5,x-5:x+5] = 1
             seeds[len(CLASS_NAMES)] = 0.5
-            import IPython ; IPython.embed()
             bg_seeds = self.get_bg_seeds(bbox, w1, h1)
             for x, y in bg_seeds:
                 seeds[0, y-5:y+5, x-5:x+5] = 1
