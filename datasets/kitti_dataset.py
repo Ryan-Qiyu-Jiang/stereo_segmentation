@@ -177,7 +177,8 @@ class StereoDataset(torch.utils.data.Dataset):
             index[:, 1] = (bbox[:,1]+bbox[:,3])/2/h1*h
             index = np.round(index).astype(int)
             for img_class, y, x in index:
-                seeds[img_class,y-5:y+5,x-5:x+5] = 1
+                if img_class != 0:
+                    seeds[img_class,y-5:y+5,x-5:x+5] = 1
             seeds[len(CLASS_NAMES)] = 0.5
             bg_seeds = self.get_bg_seeds(bbox, w1, h1)
             for x_frac, y_frac in bg_seeds:
