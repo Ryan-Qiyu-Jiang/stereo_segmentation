@@ -263,7 +263,7 @@ class ProjectionBottleneckModel(StereoProjectionModel):
         seg = self(x)
 
         x_left = x[0::2,::]
-        x_right = x[1::2::]
+        x_right = x[1::2,::]
         seg_left = seg[0::2,::]
         seg_right = seg[1::2,::]
         seeds_left = seeds[0::2,::]
