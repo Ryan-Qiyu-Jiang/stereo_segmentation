@@ -255,7 +255,7 @@ class ProjectionBottleneckModel(StereoProjectionModel):
             pred_x_right = F.grid_sample(x_left, pix_coords, padding_mode="border")
             mask = probs_left[:,class_index,::]
             # reprojection_loss += self.compute_reprojection_loss(pred_x_right, x_right)
-            reprojection_loss += torch.log(torch.abs((pred_x_right - x_right)/pred_x_right)).mean()
+            reprojection_loss += torch.log(torch.abs((pred_x_right - x_right)/pred_x_right)+1e-8).mean()
         return reprojection_loss
 
     def get_loss(self, batch):
