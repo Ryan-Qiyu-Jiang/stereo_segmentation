@@ -210,12 +210,10 @@ class ProjectionBottleneckModel(StereoProjectionModel):
     def __init__(self, lr=7e-3, batch_size=1, width=640, height=192):
         super().__init__(lr, batch_size, width, height)
 
-    def compute_reprojection_loss(self, pred, target, mask=None):
+    def compute_reprojection_loss(self, pred, target):
         """Computes reprojection loss between a batch of predicted and target images
         """
         abs_diff = torch.abs(target - pred)
-        if mask is not None:
-            abs_diff *= mask
         l1_loss = abs_diff.mean(1, True)
 
         if self.no_ssim:
@@ -227,15 +225,13 @@ class ProjectionBottleneckModel(StereoProjectionModel):
         return reprojection_loss
 
     def get_segment_disp(self, seg, disp, threshold=0.1, terrible_disp=100): # seg softmax probs
-        with torch.no_grad():
-            batch_size, num_classes, height, width = seg.shape
-            seg_disp = torch.ones_like(seg)*terrible_disp
-            disp_max_pool = nn.MaxPool2d(100, stride=100)(disp)
-            disp_window_max = F.interpolate(disp_max_pool, 
-                                size=seg.shape[2:], 
-                                mode="bilinear", align_corners=False)
-            disp_max_stacked = torch.cat([disp_window_max for _ in range(self.num_classes)], dim=1)
-            seg_disp[seg > threshold] = disp_max_stacked[seg > threshold]
+        batch_size, num_classes, height, width = seg.shape
+        seg_disp = torch.ones_like(seg)
+        disp_max_pool = nn.MaxPool2d(50, stride=50)(disp)
+        disp_window_max = F.interpolate(disp_max_pool, 
+                            size=seg.shape[2:], 
+                            mode="bilinear", align_corners=False)
+        seg_disp = disp_window_max*seg
         return seg_disp
         
 
@@ -258,7 +254,8 @@ class ProjectionBottleneckModel(StereoProjectionModel):
             pix_coords = self.project_3d(cam_points, cam['K'], T)
             pred_x_right = F.grid_sample(x_left, pix_coords, padding_mode="border")
             mask = probs_left[:,class_index,::]
-            reprojection_loss += self.compute_reprojection_loss(pred_x_right, x_right, mask=mask).mean()
+            # reprojection_loss += self.compute_reprojection_loss(pred_x_right, x_right)
+            reprojection_loss += torch.log(torch.abs((pred_x_right - x_right)/pred_x_right)).mean()
         return reprojection_loss
 
     def get_loss(self, batch):
