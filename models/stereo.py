@@ -226,7 +226,7 @@ class ProjectionBottleneckModel(StereoProjectionModel):
 
         return reprojection_loss
 
-    def get_segment_disp(self, seg, disp, threshold=0.1, terrible_disp=100):
+    def get_segment_disp(self, seg, disp, threshold=0.1, terrible_disp=100): # seg softmax probs
         with torch.no_grad():
             batch_size, num_classes, height, width = seg.shape
             seg_disp = torch.ones_like(seg)*terrible_disp
@@ -235,7 +235,7 @@ class ProjectionBottleneckModel(StereoProjectionModel):
                                 size=seg.shape[2:], 
                                 mode="bilinear", align_corners=False)
             disp_max_stacked = torch.cat([disp_window_max for _ in range(self.num_classes)], dim=1)
-            seg_disp[probs > threshold] = disp_max_stacked[probs > threshold]
+            seg_disp[seg > threshold] = disp_max_stacked[seg > threshold]
         return seg_disp
         
 
