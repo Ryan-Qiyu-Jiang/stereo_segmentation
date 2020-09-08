@@ -243,12 +243,13 @@ class ProjectionBottleneckModel(StereoProjectionModel):
                              size=seg_left.shape[2:], 
                              mode="bilinear", align_corners=False)
         seg_disp = self.get_segment_disp(seg_left, disp)
+        reprojection_loss = torch.zeros(1)
         if seg_left.is_cuda:
             seg_disp = seg_disp.cuda()
+            reprojection_loss = reprojection_loss.cuda()
 
         _, seg_depths = disp_to_depth(seg_disp, 0.1, 100)
         T = cam['stereo_T']
-        reprojection_loss = torch.zeros(1)
         for class_index in range(1, self.num_classes):
             depth = seg_depths[:,class_index, ::]
             cam_points = self.backproject_depth(depth, cam['inv_K'])
