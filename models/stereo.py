@@ -224,7 +224,7 @@ class ProjectionBottleneckModel(StereoProjectionModel):
 
         return reprojection_loss
 
-    def get_segment_disp(self, seg, disp, threshold=0.3, terrible_disp=100):
+    def get_segment_disp(self, seg, disp, threshold=0.1, terrible_disp=100):
         with torch.no_grad():
             probs = nn.Softmax(dim=1)(seg)
             batch_size, num_classes, height, width = seg.shape
@@ -235,24 +235,26 @@ class ProjectionBottleneckModel(StereoProjectionModel):
                                 mode="bilinear", align_corners=False)
             disp_max_stacked = torch.cat([disp_window_max for _ in range(self.num_classes)], dim=1)
             seg_disp[probs > threshold] = disp_max_stacked[probs > threshold]
-            return seg_disp
+        return seg_disp
         
 
-    def reprojection_loss(self, img_left, img_right, seg_left, depth_output, cam):
+    def reprojection_loss(self, x_left, x_right, seg_left, depth_output, cam):
         disp = F.interpolate(depth_output[("disp", 0)], 
                              size=seg_left.shape[2:], 
                              mode="bilinear", align_corners=False)
         seg_disp = self.get_segment_disp(seg_left, disp)
-        return seg_left, disp, 0.3, 100
+        if seg_left.is_cuda:
+            seg_disp = seg_disp.cuda()
+
         _, seg_depths = disp_to_depth(seg_disp, 0.1, 100)
         T = cam['stereo_T']
-        reprojection_loss = torch.zero(1)
+        reprojection_loss = torch.zeros(1)
         for class_index in range(1, self.num_classes):
             depth = seg_depths[:,class_index, ::]
             cam_points = self.backproject_depth(depth, cam['inv_K'])
             pix_coords = self.project_3d(cam_points, cam['K'], T)
-            pred_img_right = F.grid_sample(img_left, pix_coords, padding_mode="border")
-            reprojection_loss += self.compute_reprojection_loss(pred_img_right, img_right).mean()
+            pred_x_right = F.grid_sample(x_left, pix_coords, padding_mode="border")
+            reprojection_loss += self.compute_reprojection_loss(pred_x_right, x_right).mean()
         return reprojection_loss
 
     def get_loss(self, batch):
