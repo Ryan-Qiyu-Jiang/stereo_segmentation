@@ -234,7 +234,8 @@ class ProjectionBottleneckModel(StereoProjectionModel):
             disp_window_max = F.interpolate(disp_max_pool, 
                                 size=seg.shape[2:], 
                                 mode="bilinear", align_corners=False)
-            seg_disp[probs > threshold] = disp_window_max[probs > threshold]
+            disp_max_stacked = torch.cat([disp_window_max for _ in range(self.num_classes)], dim=1)
+            seg_disp[probs > threshold] = disp_max_stacked[probs > threshold]
             return seg_disp
         
 
