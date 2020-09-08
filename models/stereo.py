@@ -226,6 +226,7 @@ class ProjectionBottleneckModel(StereoProjectionModel):
 
     def get_segment_disp(self, seg, disp, threshold=0.3, terrible_disp=100):
         with torch.no_grad():
+            import IPython; IPython.embed()
             probs = nn.Softmax(dim=1)(seg)
             batch_size, num_classes, height, width = seg.shape
             seg_disp = torch.ones_like(disp)*terrible_disp
@@ -280,7 +281,7 @@ class ProjectionBottleneckModel(StereoProjectionModel):
             depth_output = self.depth_decoder(features)
         
         if self.ploss_weight != 0:
-            p_loss = self.reprojection_loss(img_left, img_right, seg_left, depth_output, cam)
+            p_loss = self.reprojection_loss(x_left, x_right, seg_left, depth_output, cam)
             self.loss_decomp['proj'] += [p_loss.detach()]
         else:
             p_loss = 0
