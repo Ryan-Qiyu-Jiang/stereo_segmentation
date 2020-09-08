@@ -228,7 +228,7 @@ class ProjectionBottleneckModel(StereoProjectionModel):
         with torch.no_grad():
             probs = nn.Softmax(dim=1)(seg)
             batch_size, num_classes, height, width = seg.shape
-            seg_disp = torch.ones_like(disp)*terrible_disp
+            seg_disp = torch.ones_like(seg)*terrible_disp
             disp_max_pool = nn.MaxPool2d(100, stride=100)(disp)
             disp_window_max = F.interpolate(disp_max_pool, 
                                 size=seg.shape[2:], 
