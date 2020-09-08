@@ -203,3 +203,113 @@ class StereoProjectionModel(pl.LightningModule):
         result = pl.EvalResult()
         self.test_loss += [loss.detach()]
         return result
+
+
+class ProjectionBottleneckModel(StereoProjectionModel):
+
+    def __init__(self, lr=7e-3, batch_size=1, width=640, height=192):
+        super().__init__(lr, batch_size, width, height)
+
+    def compute_reprojection_loss(self, pred, target):
+        """Computes reprojection loss between a batch of predicted and target images
+        """
+        abs_diff = torch.abs(target - pred)
+        l1_loss = abs_diff.mean(1, True)
+
+        if self.no_ssim:
+            reprojection_loss = l1_loss
+        else:
+            ssim_loss = self.ssim(pred, target).mean(1, True)
+            reprojection_loss = 0.85 * ssim_loss + 0.15 * l1_loss
+
+        return reprojection_loss
+
+    def get_segment_disp(self, seg, disp, threshold=0.3, terrible_disp=100):
+        with torch.no_grad():
+            probs = nn.Softmax(dim=1)(seg)
+            batch_size, num_classes, height, width = seg.shape
+            seg_disp = torch.ones_like(disp)*terrible_disp
+            disp_max_pool = nn.MaxPool2d(100, stride=100)(disp)
+            disp_window_max = F.interpolate(disp_max_pool, 
+                                size=seg.shape[2:], 
+                                mode="bilinear", align_corners=False)
+            seg_disp[probs > threshold] = disp_window_max[probs > threshold]
+            return seg_disp
+        
+
+    def reprojection_loss(self, img_left, img_right, seg_left, depth_output, cam):
+        disp = F.interpolate(depth_output[("disp", 0)], 
+                             size=seg_left.shape[2:], 
+                             mode="bilinear", align_corners=False)
+        seg_disp = self.get_segment_disp(seg_left, disp)
+        _, seg_depths = disp_to_depth(seg_disp, 0.1, 100)
+        T = cam['stereo_T']
+        reprojection_loss = torch.zero(1)
+        for class_index in range(1, self.num_classes):
+            depth = seg_depths[:,class_index, ::]
+            cam_points = self.backproject_depth(depth, cam['inv_K'])
+            pix_coords = self.project_3d(cam_points, cam['K'], T)
+            pred_img_right = F.grid_sample(img_left, pix_coords, padding_mode="border")
+            reprojection_loss += self.compute_reprojection_loss(pred_img_right, img_right).mean()
+        return reprojection_loss
+
+    def get_loss(self, batch):
+        """Assume batch size of 2, being the stereo pair."""
+        x, seeds, cam = batch
+        batch_size, _, channels, height, width = x.shape
+        x = x.view(-1, channels, height, width)
+        batch_size, _, num_classes, height, width = seeds.shape
+        seeds = seeds.view(-1, num_classes, height, width)
+        seg = self(x)
+
+        x_left = x[0::2,::]
+        x_right = x[1::2::]
+        seg_left = seg[0::2,::]
+        seg_right = seg[1::2,::]
+        seeds_left = seeds[0::2,::]
+
+        criterion = torch.nn.CrossEntropyLoss(ignore_index=self.num_classes)
+        seeds_flat = torch.argmax(seeds_left, dim=1)
+        seed_loss = criterion(seg_left, seeds_flat)
+        self.loss_decomp['seed'] += [seed_loss.detach()]
+
+        features = None
+        depth_output = None
+        if self.ploss_weight != 0 :
+            features = self.depth_encoder(x_left)
+            depth_output = self.depth_decoder(features)
+        
+        if self.ploss_weight != 0:
+            p_loss = self.reprojection_loss(img_left, img_right, seg_left, depth_output, cam)
+            self.loss_decomp['proj'] += [p_loss.detach()]
+        else:
+            p_loss = 0
+            self.loss_decomp['proj'] += [0]
+        loss = seed_loss + self.ploss_weight * p_loss
+        return loss
+
+    def training_step(self, batch, batch_idx):
+        loss = self.get_loss(batch)
+        self.train_loss += [loss.detach()]
+        logs = {
+            'loss': loss.detach(),
+            'seed': self.loss_decomp['seed'][-1],
+            'proj': self.loss_decomp['proj'][-1]
+        }
+        return {
+            'loss': loss,
+            'log':logs
+        }
+
+    def validation_step(self, batch, batch_idx):
+        loss = self.get_loss(batch)
+        self.val_loss += [loss.detach()]
+        logs = {
+            'val_loss': loss.detach(),
+            'val_seed': self.loss_decomp['seed'][-1],
+            'val_proj': self.loss_decomp['proj'][-1]
+        }
+        return {
+            'loss': loss,
+            'log':logs
+        }
