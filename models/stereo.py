@@ -54,8 +54,8 @@ class StereoProjectionModel(pl.LightningModule):
         self.test_loss = []
         self.rloss_weight = 2e-9 #2e-9
         self.rloss_scale = 0.5
-        self.rloss_sig_rgb = 15
-        self.rloss_sig_xy = 100
+        self.rloss_sig_rgb = 25
+        self.rloss_sig_xy = 30
         self.ploss_weight = 0.5
         self.lr = lr
         self.width = width
