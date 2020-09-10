@@ -106,7 +106,7 @@ class StereoProjectionModel(pl.LightningModule):
         return reprojection_loss
 
     def get_rloss(self, seg, x, depth_output):
-        max_mag_seg = max(torch.max(seg), torch.min(seg))
+        max_mag_seg = torch.abs(max(torch.max(seg), torch.min(seg)))
         probs = nn.Softmax(dim=1)(seg/max_mag_seg)
         resize_img = nn.Upsample(size=x.shape[2:], mode='bilinear', align_corners=True)
         batch_size, num_classes, h, w = seg.shape
