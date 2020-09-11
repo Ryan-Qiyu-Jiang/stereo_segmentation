@@ -179,6 +179,25 @@ class StereoDataset(torch.utils.data.Dataset):
             for img_class, y, x in index:
                 if img_class != 0:
                     seeds[img_class,y-5:y+5,x-5:x+5] = 1
+
+            index = np.zeros((bbox.shape[0], 3))
+            index[:, 0] = labels_df[0].values
+            index[:, 2] = (bbox[:,0]/4+bbox[:,2]*3/4)/w1*w
+            index[:, 1] = (bbox[:,1]+bbox[:,3])/2/h1*h
+            index = np.round(index).astype(int)
+            for img_class, y, x in index:
+                if img_class != 0:
+                    seeds[img_class,y-5:y+5,x-5:x+5] = 1
+
+            index = np.zeros((bbox.shape[0], 3))
+            index[:, 0] = labels_df[0].values
+            index[:, 2] = (bbox[:,0]*3/4+bbox[:,2]/4)/w1*w
+            index[:, 1] = (bbox[:,1]+bbox[:,3])/2/h1*h
+            index = np.round(index).astype(int)
+            for img_class, y, x in index:
+                if img_class != 0:
+                    seeds[img_class,y-5:y+5,x-5:x+5] = 1
+
             seeds[len(CLASS_NAMES)] = 0.5
             bg_seeds = self.get_bg_seeds(bbox, w1, h1, num_seeds=5)
             for x_frac, y_frac in bg_seeds:

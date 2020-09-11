@@ -110,11 +110,11 @@ class StereoProjectionModel(pl.LightningModule):
         probs = nn.Softmax(dim=1)(seg/max_mag_seg)
         resize_img = nn.Upsample(size=x.shape[2:], mode='bilinear', align_corners=True)
         batch_size, num_classes, h, w = seg.shape
-        # roi = torch.ones(batch_size, h, w)
-        roi = seg[:,0,::].detach().cpu()
-        max_roi = torch.max(roi)
-        min_roi = torch.min(roi)
-        roi = 1-(roi-min_roi)/(max_roi-min_roi)
+        roi = torch.ones(batch_size, h, w)
+        # roi = seg[:,0,::].detach().cpu()
+        # max_roi = torch.max(roi)
+        # min_roi = torch.min(roi)
+        # roi = 1-(roi-min_roi)/(max_roi-min_roi)
         roi = resize_img(roi.unsqueeze(1).float()).squeeze(1)
         disp = F.interpolate(depth_output[("disp", 0)], 
                              size=x.shape[2:], 
