@@ -53,7 +53,7 @@ class StereoProjectionModel(pl.LightningModule):
         self.val_loss = []
         self.test_loss = []
         self.rloss_weight = 2e-9 #2e-9
-        self.rloss_scale = 0.5
+        self.rloss_scale = 1
         self.rloss_sig_rgb = 25
         self.rloss_sig_xy = 30
         self.ploss_weight = 0.5
@@ -68,6 +68,15 @@ class StereoProjectionModel(pl.LightningModule):
         self.project_3d = Project3D(batch_size, height, width)
         self.ssim = SSIM()
         self.no_ssim = True
+
+    def set_rloss(self, rloss_sig_rgb, rloss_sig_xy, rloss_scale):
+        self.rloss_scale = rloss_scale
+        self.rloss_sig_rgb = rloss_sig_rgb
+        self.rloss_sig_xy = rloss_sig_xy
+        self.densecrflosslayer = DenseCRFLoss(weight=1, 
+                                              sigma_rgb=self.rloss_sig_rgb, 
+                                              sigma_xy=self.rloss_sig_xy, 
+                                              scale_factor=self.rloss_scale)
 
     def forward(self, x):
         return self.model(x) 
