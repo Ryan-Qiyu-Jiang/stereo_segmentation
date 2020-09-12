@@ -68,6 +68,7 @@ class StereoProjectionModel(pl.LightningModule):
         self.project_3d = Project3D(batch_size, height, width)
         self.ssim = SSIM()
         self.no_ssim = True
+        self.use_depth_rloss = True
 
     def set_rloss(self, rloss_sig_rgb, rloss_sig_xy, rloss_scale):
         self.rloss_scale = rloss_scale
@@ -114,7 +115,7 @@ class StereoProjectionModel(pl.LightningModule):
         reprojection_loss = self.compute_reprojection_loss(pred_seg_s, seg_right).mean()
         return reprojection_loss
 
-    def get_rloss(self, seg, x, depth_output):
+    def get_rloss(self, seg, x, depth_output, use_depth=True):
         max_mag_seg = torch.abs(max(torch.max(seg), torch.min(seg)))
         probs = nn.Softmax(dim=1)(seg/max_mag_seg)
         resize_img = nn.Upsample(size=x.shape[2:], mode='bilinear', align_corners=True)
@@ -131,9 +132,14 @@ class StereoProjectionModel(pl.LightningModule):
         min_disp = torch.min(disp)
         max_disp = torch.max(disp)
         disp = (disp-min_disp)/(max_disp-min_disp)*255.0
-        disp_img = torch.cat([disp, disp, disp], dim=1).detach()
+        zero = torch.zeros_like(disp)
+        disp_img = torch.cat([disp, zero, zero], dim=1).detach()
         # import IPython; IPython.embed()
-        densecrfloss = self.densecrflosslayer(disp_img.cpu(), probs, roi)
+        if use_depth:
+            densecrfloss = self.densecrflosslayer(disp_img.cpu(), probs, roi)
+        else:
+            denormalized_image = denormalizeimage(x, mean=mean, std=std)
+            densecrfloss = self.densecrflosslayer(denormalized_image, probs, roi)
         return self.rloss_weight*densecrfloss
 
     def get_loss(self, batch):
@@ -162,7 +168,7 @@ class StereoProjectionModel(pl.LightningModule):
             depth_output = self.depth_decoder(features)
 
         if self.rloss_weight != 0:
-            densecrfloss = self.get_rloss(seg_left, x_left, depth_output)
+            densecrfloss = self.get_rloss(seg_left, x_left, depth_output, use_depth=self.use_depth_rloss)
             if seed_loss.is_cuda:
                 densecrfloss = densecrfloss.cuda()
             self.loss_decomp['dCRF'] += [densecrfloss.detach()]
