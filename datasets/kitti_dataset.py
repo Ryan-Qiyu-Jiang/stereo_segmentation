@@ -93,13 +93,14 @@ class SeedsDataset(torch.utils.data.Dataset):
         return len(self.img_files)
 
 class SingleDataset(torch.utils.data.Dataset):
-    def __init__(self, image, seeds, length):
+    def __init__(self, image, seeds, cam, length):
         self.image = image
         self.seeds = seeds
+        self.cam = cam
         self.length = length
 
     def __getitem__(self, index):
-        return self.image, self.seeds
+        return self.image, self.seeds, self.cam
 
     def __len__(self):
         return self.length
