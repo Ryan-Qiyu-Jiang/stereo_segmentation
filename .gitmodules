@@ -1,3 +1,6 @@
 [submodule "monodepth2"]
 	path = monodepth2
 	url = https://github.com/nianticlabs/monodepth2.git
+[submodule "rloss"]
+	path = rloss
+	url = https://github.com/Ryan-Qiyu-Jiang/rloss.git
