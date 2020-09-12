@@ -107,13 +107,14 @@ class SingleDataset(torch.utils.data.Dataset):
 
 
 class StereoDataset(torch.utils.data.Dataset):
-    def __init__(self, list_path, width=640, height=192):
+    def __init__(self, list_path, width=640, height=192, background_seeds=10):
         with open(list_path, 'r') as file:
             self.img_files = file.readlines()
         self.label_files = [path.replace('images', 'labels').replace('.png', '.txt').replace('.jpg', '.txt') for path in self.img_files]
         self.max_objects = 50
         self.width = width
         self.height = height
+        self.background_seeds = background_seeds
         # NOTE: Make sure your intrinsics matrix is *normalized* by the original image size    
         self.K = np.array([[0.58, 0, 0.5, 0],
                            [0, 1.92, 0.5, 0],
@@ -200,7 +201,7 @@ class StereoDataset(torch.utils.data.Dataset):
                     seeds[img_class,y-3:y+3,x-3:x+3] = 1
 
             seeds[len(CLASS_NAMES)] = 0.5
-            bg_seeds = self.get_bg_seeds(bbox, w1, h1, num_seeds=10)
+            bg_seeds = self.get_bg_seeds(bbox, w1, h1, num_seeds=background_seeds)
             for x_frac, y_frac in bg_seeds:
                 x = int(x_frac*w)
                 y = int(y_frac*h)
