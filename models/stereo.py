@@ -104,15 +104,15 @@ class StereoProjectionModel(pl.LightningModule):
 
     def reprojection_loss(self, seg_left, seg_right, depth_output, cam):
         disp = F.interpolate(depth_output[("disp", 0)], 
-                             size=seg_left.shape[2:], 
+                             size=seg_right.shape[2:], 
                              mode="bilinear", align_corners=False)
         _, depth = disp_to_depth(disp, 0.1, 100)
         T = cam['stereo_T']
         cam_points = self.backproject_depth(depth, cam['inv_K'])
         pix_coords = self.project_3d(cam_points, cam['K'], T)
-        pred_seg_s = F.grid_sample(seg_left, pix_coords, padding_mode="border")
+        pred_seg_s = F.grid_sample(seg_right, pix_coords, padding_mode="border")
 
-        reprojection_loss = self.compute_reprojection_loss(pred_seg_s, seg_right).mean()
+        reprojection_loss = self.compute_reprojection_loss(pred_seg_s, seg_left).mean()
         return reprojection_loss
 
     def get_rloss(self, seg, x, depth_output, use_depth=True):
@@ -164,11 +164,11 @@ class StereoProjectionModel(pl.LightningModule):
         features = None
         depth_output = None
         if self.rloss_weight != 0 or self.ploss_weight != 0 :
-            features = self.depth_encoder(x_left)
+            features = self.depth_encoder(x_right)
             depth_output = self.depth_decoder(features)
 
         if self.rloss_weight != 0:
-            densecrfloss = self.get_rloss(seg_left, x_left, depth_output, use_depth=self.use_depth_rloss)
+            densecrfloss = self.get_rloss(seg_right, x_right, depth_output, use_depth=self.use_depth_rloss)
             if seed_loss.is_cuda:
                 densecrfloss = densecrfloss.cuda()
             self.loss_decomp['dCRF'] += [densecrfloss.detach()]
