@@ -6,6 +6,7 @@ from torch.nn import functional as F
 import pytorch_lightning as pl
 from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torchvision.utils import make_grid
 import sys, os
 sys.path.append(os.path.abspath("rloss/pytorch/pytorch-deeplab_v3_plus"))
 from DenseCRFLoss import DenseCRFLoss
@@ -142,7 +143,7 @@ class StereoProjectionModel(pl.LightningModule):
             densecrfloss = self.densecrflosslayer(denormalized_image, probs, roi)
         return self.rloss_weight*densecrfloss
 
-    def get_loss(self, batch):
+    def get_loss(self, batch, batch_idx=0):
         """Assume batch size of 2, being the stereo pair."""
         x, seeds, cam = batch
         batch_size, _, channels, height, width = x.shape
@@ -185,10 +186,14 @@ class StereoProjectionModel(pl.LightningModule):
             p_loss = 0
             self.loss_decomp['proj'] += [0]
         loss = seed_loss + densecrfloss + self.ploss_weight * p_loss
+
+        img_grid = make_grid(x[:3], 3, normalize=True, range=(0, 255))
+        self.experiment.add_image('imgs', img_grid, batch_idx)
+
         return loss
 
     def training_step(self, batch, batch_idx):
-        loss = self.get_loss(batch)
+        loss = self.get_loss(batch, batch_idx)
         self.train_loss += [loss.detach()]
         logs = {
             'loss': loss.detach(),
