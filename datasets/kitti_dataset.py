@@ -105,7 +105,6 @@ class SingleDataset(torch.utils.data.Dataset):
     def __len__(self):
         return self.length
 
-
 class StereoDataset(torch.utils.data.Dataset):
     def __init__(self, list_path, width=640, height=192, background_seeds=10):
         with open(list_path, 'r') as file:
